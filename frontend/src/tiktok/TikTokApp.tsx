@@ -158,7 +158,7 @@ export default function TikTokApp() {
         </h1>
 
         <motion.p {...fadeRise(1)} className="lede mt-6">
-          Paste a TikTok link, get it without the watermark, in seconds.
+          Paste a TikTok link and choose a download quality.
         </motion.p>
 
         <motion.div {...fadeRise(2)} className="mx-auto mt-9 max-w-2xl">
