@@ -10,6 +10,10 @@ coverage/
 .superpowers/
 .claude/
 .env
+.env.*
+!.env.example
+.vercel/
+.wrangler/
 backend/.env
 deploy/app.env
 assets/

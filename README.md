@@ -42,13 +42,31 @@ Open http://localhost:8000. That's the whole setup.
 Or deploy your own: use `render.yaml` (free tier) or `compose.yaml` + `Caddyfile`
 on any VPS (edit the domain in the Caddyfile).
 
+### Free hobby setup: Cloudflare Pages + Render
+
+For light personal use, host the static frontend on Cloudflare Pages Free and
+the Docker/ffmpeg backend on Render Free. Use the included `render.yaml`,
+`wrangler.jsonc` and [free setup guide](docs/free-hosting.md). There are cold
+starts, tight bandwidth limits and possible suspension for heavy media traffic.
+This is not an unlimited or always-on free video service. The guide explains
+how to avoid automatic charges; no accounts or services are created by this code.
+
+### Vercel frontend (alternative)
+
+The frontend can also run on Vercel, with the Docker backend hosted separately
+for media streaming and ffmpeg. Import the repository root, set the public
+`VITE_API_BASE_URL` to your HTTPS backend origin, and configure `CORS_ORIGINS` on
+that backend. See [the Vercel setup guide](docs/vercel.md) for build settings,
+preview domains, admin access and verification. This is a split deployment;
+uploading only the frontend does not provide a working downloader.
+
 ### Maintenance mode
 
 To take the site down cleanly for an update, set `MAINTENANCE_MODE=1` in the Render
 env. That triggers a redeploy and the whole site starts serving a branded animated
 maintenance page (503 with a `Retry-After` header); API calls return a 503 JSON
-`{"error": "maintenance"}`. Push your update as normal, which redeploys again with
-maintenance still shown. When you are ready to go live, remove `MAINTENANCE_MODE`
+`{"error": "maintenance"}`. Deploy your update with maintenance still shown
+(the free `render.yaml` template uses manual deployments). When you are ready to go live, remove `MAINTENANCE_MODE`
 (or set it to `0`), which redeploys once more and the site is back. The flag is read
 per request, so every redeploy picks up the current value. `/api/health` stays 200
 throughout, so Render does not mark the deploy failed or roll it back.

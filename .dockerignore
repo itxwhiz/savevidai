@@ -2,5 +2,8 @@
 **/dist
 **/.venv
 **/__pycache__
+**/.env*
+deploy/app.env
+.vercel
 .git
 docs
