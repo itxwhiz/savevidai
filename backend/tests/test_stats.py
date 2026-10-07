@@ -39,13 +39,13 @@ def _seeded():
     s = SqliteStore(":memory:")
     s.init_schema()
     rows = [
-        ("2026-07-17 03:00:00", "visit", None, "BD", "v1"),
-        ("2026-07-17 03:01:00", "fetch", "ok", "BD", "v1"),
-        ("2026-07-17 03:02:00", "download", "1080p", "BD", "v1"),
-        ("2026-07-17 04:00:00", "visit", None, "US", "v2"),
-        ("2026-07-17 04:01:00", "fetch", "no_video", "US", "v2"),
-        ("2026-07-18 03:00:00", "visit", None, "BD", "v1b"),
-        ("2026-07-18 03:01:00", "fetch", "ok", "BD", "v1b"),
+        (_day_ts(5, 3, 0), "visit", None, "BD", "v1"),
+        (_day_ts(5, 3, 1), "fetch", "ok", "BD", "v1"),
+        (_day_ts(5, 3, 2), "download", "1080p", "BD", "v1"),
+        (_day_ts(5, 4, 0), "visit", None, "US", "v2"),
+        (_day_ts(5, 4, 1), "fetch", "no_video", "US", "v2"),
+        (_day_ts(4, 3, 0), "visit", None, "BD", "v1b"),
+        (_day_ts(4, 3, 1), "fetch", "ok", "BD", "v1b"),
     ]
     s.execute_many([
         ("INSERT INTO events (ts,type,outcome,country,visitor) VALUES (?,?,?,?,?)", list(r))
@@ -79,8 +79,8 @@ def test_countries_always_includes_unknown_bucket():
     s = SqliteStore(":memory:")
     s.init_schema()
     rows = [
-        ("2026-07-18 03:00:00", "visit", None, "BD", "v1"),
-        ("2026-07-18 03:01:00", "visit", None, "US", "v2"),
+        (_day_ts(4, 3, 0), "visit", None, "BD", "v1"),
+        (_day_ts(4, 3, 1), "visit", None, "US", "v2"),
     ]
     s.execute_many([
         ("INSERT INTO events (ts,type,outcome,country,visitor) VALUES (?,?,?,?,?)", list(r))
@@ -101,16 +101,16 @@ def test_conversion_is_sum_of_daily_distinct_not_cross_day_distinct():
     s = SqliteStore(":memory:")
     s.init_schema()
     rows = [
-        # day 1 (2026-07-16): v1 visits only, v2 visits + fetches
-        ("2026-07-16 03:00:00", "visit", None, "BD", "v1"),
-        ("2026-07-16 03:05:00", "visit", None, "US", "v2"),
-        ("2026-07-16 03:06:00", "fetch", "ok", "US", "v2"),
-        # day 2 (2026-07-17): v1 fetches (no visit event needed), v3 fetches only
-        ("2026-07-17 03:00:00", "fetch", "ok", "BD", "v1"),
-        ("2026-07-17 03:01:00", "fetch", "ok", "US", "v3"),
-        # day 3 (2026-07-18): v2 fetches only, v4 visits and never fetches
-        ("2026-07-18 03:00:00", "fetch", "ok", "US", "v2"),
-        ("2026-07-18 03:01:00", "visit", None, "BD", "v4"),
+        # day 1 (six days ago): v1 visits only, v2 visits + fetches
+        (_day_ts(6, 3, 0), "visit", None, "BD", "v1"),
+        (_day_ts(6, 3, 5), "visit", None, "US", "v2"),
+        (_day_ts(6, 3, 6), "fetch", "ok", "US", "v2"),
+        # day 2 (five days ago): v1 fetches (no visit event needed), v3 fetches only
+        (_day_ts(5, 3, 0), "fetch", "ok", "BD", "v1"),
+        (_day_ts(5, 3, 1), "fetch", "ok", "US", "v3"),
+        # day 3 (four days ago): v2 fetches only, v4 visits and never fetches
+        (_day_ts(4, 3, 0), "fetch", "ok", "US", "v2"),
+        (_day_ts(4, 3, 1), "visit", None, "BD", "v4"),
     ]
     s.execute_many([
         ("INSERT INTO events (ts,type,outcome,country,visitor) VALUES (?,?,?,?,?)", list(r))
@@ -192,9 +192,9 @@ def test_stats_platforms_breakdown():
     s = SqliteStore(":memory:")
     s.init_schema()
     rows = [
-        ("2026-07-20 10:00:00", "fetch", "ok", None, "v1", "twitter"),
-        ("2026-07-20 10:01:00", "fetch", "ok", None, "v2", "tiktok"),
-        ("2026-07-20 10:02:00", "download", "hd", None, "v2", "tiktok"),
+        (_day_ts(2, 10, 0), "fetch", "ok", None, "v1", "twitter"),
+        (_day_ts(2, 10, 1), "fetch", "ok", None, "v2", "tiktok"),
+        (_day_ts(2, 10, 2), "download", "hd", None, "v2", "tiktok"),
     ]
     s.execute_many([("INSERT INTO events (ts,type,outcome,country,visitor,platform) VALUES (?,?,?,?,?,?)", list(r)) for r in rows])
     out = compute_stats(s, days=30, tz=0)
@@ -266,14 +266,14 @@ def test_platforms_breakdown_ordered_by_fetches_desc():
     s.init_schema()
     rows = [
         # twitter: 1 fetch
-        ("2026-07-20 10:00:00", "fetch", "ok", None, "v1", "twitter"),
+        (_day_ts(2, 10, 0), "fetch", "ok", None, "v1", "twitter"),
         # tiktok: 3 fetches (the largest, must sort first)
-        ("2026-07-20 10:01:00", "fetch", "ok", None, "v2", "tiktok"),
-        ("2026-07-20 10:02:00", "fetch", "ok", None, "v3", "tiktok"),
-        ("2026-07-20 10:03:00", "fetch", "ok", None, "v4", "tiktok"),
+        (_day_ts(2, 10, 1), "fetch", "ok", None, "v2", "tiktok"),
+        (_day_ts(2, 10, 2), "fetch", "ok", None, "v3", "tiktok"),
+        (_day_ts(2, 10, 3), "fetch", "ok", None, "v4", "tiktok"),
         # instagram: 2 fetches (middle)
-        ("2026-07-20 10:04:00", "fetch", "ok", None, "v5", "instagram"),
-        ("2026-07-20 10:05:00", "fetch", "ok", None, "v6", "instagram"),
+        (_day_ts(2, 10, 4), "fetch", "ok", None, "v5", "instagram"),
+        (_day_ts(2, 10, 5), "fetch", "ok", None, "v6", "instagram"),
     ]
     s.execute_many([
         ("INSERT INTO events (ts,type,outcome,country,visitor,platform) VALUES (?,?,?,?,?,?)", list(r))
@@ -284,9 +284,10 @@ def test_platforms_breakdown_ordered_by_fetches_desc():
     assert order == ["tiktok", "instagram", "twitter"]
 
 
-def _day_ts(offset_days: int, hour: int = 12) -> str:
+def _day_ts(offset_days: int, hour: int = 12, minute: int = 0) -> str:
+    # Keep windowed fixtures recent so these tests do not expire with the calendar.
     d = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=offset_days)
-    return d.replace(hour=hour, minute=0, second=0, microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+    return d.replace(hour=hour, minute=minute, second=0, microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def test_avg_active_d7_d30_daily_uniques_over_fixed_window():
@@ -380,13 +381,13 @@ def test_sources_grouped_and_ordered_desc():
     s = SqliteStore(":memory:")
     s.init_schema()
     rows = [
-        ("2026-07-20 10:00:00", "visit", None, "BD", "v1", None, "search", None),
-        ("2026-07-20 10:01:00", "visit", None, "BD", "v2", None, "search", None),
-        ("2026-07-20 10:02:00", "visit", None, "US", "v3", None, "direct", None),
+        (_day_ts(2, 10, 0), "visit", None, "BD", "v1", None, "search", None),
+        (_day_ts(2, 10, 1), "visit", None, "BD", "v2", None, "search", None),
+        (_day_ts(2, 10, 2), "visit", None, "US", "v3", None, "direct", None),
         # non-visit with a source must not be counted
-        ("2026-07-20 10:03:00", "fetch", "ok", "US", "v3", None, "search", None),
+        (_day_ts(2, 10, 3), "fetch", "ok", "US", "v3", None, "search", None),
         # visit with NULL source must not be counted
-        ("2026-07-20 10:04:00", "visit", None, "US", "v4", None, None, None),
+        (_day_ts(2, 10, 4), "visit", None, "US", "v4", None, None, None),
     ]
     s.execute_many([
         (("INSERT INTO events (ts,type,outcome,country,visitor,platform,source,visitor_kind) "
@@ -407,16 +408,16 @@ def test_visitors_new_vs_returning_split():
     rows = [
         # vA: a new person browsing two pages -> one 'new' + one 'returning'
         # event on the same daily hash. Must count as NEW only, never returning.
-        ("2026-07-20 10:00:00", "visit", None, "BD", "vA", None, None, "new"),
-        ("2026-07-20 10:01:00", "visit", None, "BD", "vA", None, None, "returning"),
+        (_day_ts(2, 10, 0), "visit", None, "BD", "vA", None, None, "new"),
+        (_day_ts(2, 10, 1), "visit", None, "BD", "vA", None, None, "returning"),
         # vB: a returning person on two pages -> two 'returning' events on the
         # same daily hash. Must count as ONE distinct returning, not two.
-        ("2026-07-20 10:02:00", "visit", None, "US", "vB", None, None, "returning"),
-        ("2026-07-20 10:03:00", "visit", None, "US", "vB", None, None, "returning"),
+        (_day_ts(2, 10, 2), "visit", None, "US", "vB", None, None, "returning"),
+        (_day_ts(2, 10, 3), "visit", None, "US", "vB", None, None, "returning"),
         # vC: a new person on one page -> NEW.
-        ("2026-07-20 10:04:00", "visit", None, "US", "vC", None, None, "new"),
+        (_day_ts(2, 10, 4), "visit", None, "US", "vC", None, None, "new"),
         # non-visit rows carry no visitor_kind and must be ignored
-        ("2026-07-20 10:05:00", "fetch", "ok", "US", "vA", None, None, None),
+        (_day_ts(2, 10, 5), "fetch", "ok", "US", "vA", None, None, None),
     ]
     s.execute_many([
         (("INSERT INTO events (ts,type,outcome,country,visitor,platform,source,visitor_kind) "
@@ -459,17 +460,17 @@ def test_qualities_bucketed_and_reaggregated():
     s.init_schema()
     rows = [
         # three distinct raw heights that all snap to 1080p -> must SUM to 3
-        ("2026-07-18 03:00:00", "download", "1124p", "BD", "v1"),
-        ("2026-07-18 03:01:00", "download", "1054p", "BD", "v2"),
-        ("2026-07-18 03:02:00", "download", "1080p", "BD", "v3"),
+        (_day_ts(4, 3, 0), "download", "1124p", "BD", "v1"),
+        (_day_ts(4, 3, 1), "download", "1054p", "BD", "v2"),
+        (_day_ts(4, 3, 2), "download", "1080p", "BD", "v3"),
         # two that snap to 720p
-        ("2026-07-18 03:03:00", "download", "680p", "BD", "v4"),
-        ("2026-07-18 03:04:00", "download", "720p", "BD", "v5"),
+        (_day_ts(4, 3, 3), "download", "680p", "BD", "v4"),
+        (_day_ts(4, 3, 4), "download", "720p", "BD", "v5"),
         # a named tiktok label, untouched
-        ("2026-07-18 03:05:00", "download", "hd", "BD", "v6"),
+        (_day_ts(4, 3, 5), "download", "hd", "BD", "v6"),
         # a download whose quality was never sent -> NULL outcome, must be
         # excluded from the panel (not surfaced as a bare null row)
-        ("2026-07-18 03:06:00", "download", None, "BD", "v7"),
+        (_day_ts(4, 3, 6), "download", None, "BD", "v7"),
     ]
     s.execute_many([
         ("INSERT INTO events (ts,type,outcome,country,visitor) VALUES (?,?,?,?,?)", list(r))
