@@ -4,6 +4,7 @@ import shutil
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
@@ -14,6 +15,7 @@ from .analytics.config import load_config
 from .analytics.recorder import Recorder
 from .analytics.router import router as analytics_router
 from .analytics.store import make_store
+from .cors import allowed_origins
 from .errors import AppError
 from .limits import limiter
 
@@ -170,6 +172,18 @@ def create_app() -> FastAPI:
     static_dir = os.environ.get("STATIC_DIR", "")
     if static_dir and os.path.isdir(static_dir):
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    # Add last so preflight and maintenance/error responses get CORS too.
+    # Public APIs do not need cookies. Admin stays on the backend origin.
+    origins = allowed_origins(os.environ.get("CORS_ORIGINS", ""))
+    if origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=False,
+            allow_methods=["GET", "POST"],
+            allow_headers=["Content-Type"],
+            expose_headers=["Content-Length", "Content-Disposition", "Retry-After"],
+        )
     return app
 
 
