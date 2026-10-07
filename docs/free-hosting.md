@@ -1,9 +1,10 @@
 # Free hobby hosting: Cloudflare Pages + Render
 
-This is the recommended starting path for a zero-dollar, light-personal-use
-setup. Cloudflare Pages serves the frontend. Render Free runs this repository's
-Docker backend with Python and ffmpeg. This is a split deployment, not a fully
-Cloudflare-hosted service. Pages alone cannot run the existing ffmpeg backend.
+This is a starting path for a zero-dollar, light-personal-use setup, subject to
+account eligibility and provider verification. Cloudflare Pages serves the
+frontend. Render Free runs this repository's Docker backend with Python and
+ffmpeg. This is a split deployment, not a fully Cloudflare-hosted service. Pages
+alone cannot run the existing ffmpeg backend.
 
 No account, deployment, payment method or paid resource is created by these
 files. Review both providers' current limits and terms before you deploy.
@@ -31,6 +32,12 @@ For a strict $0 budget:
 - Choose the free workspace and free compute instance, and do not add a payment
   method. If your existing workspace has one, review billing before deploying;
   the `free` instance setting alone is not a hard zero-spend guarantee.
+- If Render asks for a card even with Free selected, stop. A Free-service attempt
+  on October 7, 2026 displayed an Add Card dialog stating that adding a card
+  would trigger a temporary $1 USD authorization. No card was added and no
+  service was created. Provider signup
+  or verification requirements can prevent this no-card setup; these files do
+  not bypass them. Adding a card also changes the overage-billing risk above.
 - Do not add databases, disks, Workers Paid, Cloudflare Containers, storage,
   custom-domain purchases or other paid extras. Use the included provider URLs.
 - Accept suspension when free allowances run out. Do not upgrade automatically.
