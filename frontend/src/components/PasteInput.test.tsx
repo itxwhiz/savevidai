@@ -1,7 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { PasteInput } from "./PasteInput";
+
+afterEach(() => vi.useRealTimers());
 
 test("submits trimmed url", async () => {
   const onSubmit = vi.fn();
@@ -31,4 +33,15 @@ test("uses the provided aria-label for the tiktok page", () => {
     <PasteInput status="idle" errorMessage={null} onSubmit={vi.fn()} ariaLabel="TikTok video link" />,
   );
   expect(screen.getByRole("textbox")).toHaveAccessibleName("TikTok video link");
+});
+
+test("explains a slow cold start and removes the hint when the request ends", () => {
+  vi.useFakeTimers();
+  const { rerender } = render(<PasteInput status="resolving" errorMessage={null} onSubmit={vi.fn()} />);
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  act(() => vi.advanceTimersByTime(10_000));
+  expect(screen.getByRole("status")).toHaveTextContent("may be waking up");
+  rerender(<PasteInput status="error" errorMessage="try again" onSubmit={vi.fn()} />);
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  expect(screen.getByRole("button")).toBeEnabled();
 });

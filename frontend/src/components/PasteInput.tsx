@@ -23,7 +23,15 @@ export function PasteInput({
 }: Props) {
   const [value, setValue] = useState("");
   const [justFetched, setJustFetched] = useState(false);
+  const [slowRequest, setSlowRequest] = useState(false);
   const busy = status === "resolving";
+
+  useEffect(() => {
+    setSlowRequest(false);
+    if (!busy) return;
+    const timer = setTimeout(() => setSlowRequest(true), 10_000);
+    return () => clearTimeout(timer);
+  }, [busy]);
 
   useEffect(() => {
     if (presetValue) setValue(presetValue);
@@ -89,6 +97,11 @@ export function PasteInput({
           )}
         </motion.button>
       </div>
+      {busy && slowRequest && (
+        <p role="status" className="mt-4 text-sm text-zinc-500">
+          the server may be waking up. the first request can take about a minute.
+        </p>
+      )}
       {status === "error" && errorMessage && (
         <motion.p
           initial={{ opacity: 0, y: -4 }}
