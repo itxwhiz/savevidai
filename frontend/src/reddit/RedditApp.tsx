@@ -160,7 +160,7 @@ export default function RedditApp() {
         </h1>
 
         <motion.p {...fadeRise(1)} className="lede mt-6">
-          Paste a Reddit post link, get the video with audio, in seconds.
+          Paste a Reddit post link and get the video with audio.
         </motion.p>
 
         <motion.div {...fadeRise(2)} className="mx-auto mt-9 max-w-2xl">
