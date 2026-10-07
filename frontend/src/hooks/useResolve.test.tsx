@@ -35,3 +35,39 @@ test("network failure maps to network error state", async () => {
   await act(() => result.current.resolve("https://x.com/jack/status/20"));
   expect(result.current.state).toMatchObject({ status: "error", code: "network" });
 });
+
+test("a newer request cancels the old one and ignores its late completion", async () => {
+  const responses: Array<(r: Response) => void> = [];
+  const signals: AbortSignal[] = [];
+  vi.stubGlobal("fetch", vi.fn((_url, init) => new Promise<Response>((release) => {
+    responses.push(release);
+    signals.push(init.signal);
+  })));
+  const { result } = renderHook(() => useResolve());
+  act(() => void result.current.resolve("first"));
+  act(() => void result.current.resolve("second"));
+  expect(signals[0].aborted).toBe(true);
+  await act(async () => responses[1](new Response(JSON.stringify({ ...BODY, id: "new" }))));
+  expect(result.current.state).toMatchObject({ status: "ready", data: { id: "new" } });
+  await act(async () => responses[0](new Response("old failure", { status: 502 })));
+  expect(result.current.state).toMatchObject({ status: "ready", data: { id: "new" } });
+});
+
+test("reset and unmount cancel pending resolves", async () => {
+  let release!: (r: Response) => void;
+  const signals: AbortSignal[] = [];
+  vi.stubGlobal("fetch", vi.fn((_url, init) => new Promise<Response>((res) => {
+    release = res;
+    signals.push(init.signal);
+  })));
+  const { result, unmount } = renderHook(() => useResolve());
+  act(() => void result.current.resolve("first"));
+  act(() => result.current.reset());
+  expect(signals[0].aborted).toBe(true);
+  await act(async () => release(new Response(JSON.stringify(BODY))));
+  expect(result.current.state.status).toBe("idle");
+  act(() => void result.current.resolve("second"));
+  unmount();
+  expect(signals[1].aborted).toBe(true);
+  await act(async () => release(new Response(JSON.stringify(BODY))));
+});
