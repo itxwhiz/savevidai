@@ -40,8 +40,13 @@ ADMIN_PASSWORD, ANALYTICS_SALT) - all set, analytics is LIVE. Contains:
 
 ## Deployment
 
-- Render (Docker Blueprint from this repo). Push to `main` = auto-deploy = full image rebuild
-  (ffmpeg is installed in the image). CI must be green first.
+- The Render Docker Blueprint now defaults to Free compute and manual deployments
+  to conserve hobby build minutes. The image includes ffmpeg. CI must be green first.
+- Optional split hosting: Cloudflare Pages frontend + Render Free backend is documented
+  in `docs/free-hosting.md`; `docs/vercel.md` retains the Vercel alternative. Hosted frontend
+  builds require `VITE_API_BASE_URL`; the backend needs exact `CORS_ORIGINS`. Media bytes
+  go directly to the backend and admin remains on its own origin. Respect free-plan
+  sleep/usage limits; do not add keep-awake traffic or imply unlimited free hosting.
 - Cloudflare fronts savevidai.israfill.dev but is DNS-only (grey cloud) for the Render cert, so
   no edge caching - immutable asset Cache-Control helps browser caching only.
 - Reddit galleries + share links need optional REDDIT_CLIENT_ID/SECRET (a reddit "script" app);

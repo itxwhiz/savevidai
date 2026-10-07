@@ -1,3 +1,5 @@
+import { apiUrl } from "./backend";
+
 type EventType = "visit" | "download";
 
 /** Fire-and-forget analytics beacon. No personal data, never throws, never blocks. */
@@ -12,7 +14,7 @@ export function sendEvent(
 ): void {
   try {
     const body = JSON.stringify({ type, ...opts });
-    void fetch("/api/event", {
+    void fetch(apiUrl("/api/event"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:vercel": "tsc --noEmit && vite build --mode vercel",
+    "build:pages": "tsc --noEmit && vite build --mode pages",
     "preview": "vite preview",
     "test": "vitest",
     "lint": "tsc --noEmit"

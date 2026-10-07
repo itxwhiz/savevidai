@@ -3,5 +3,11 @@ services:
     name: savevidai
     runtime: docker
     plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/health
-    autoDeploy: true
+    # Manual updates conserve free build minutes. Never select a paid instance.
+    autoDeployTrigger: "off"
+    envVars:
+      - key: CORS_ORIGINS
+        sync: false

@@ -1,3 +1,5 @@
+import { apiUrl } from "./backend";
+
 export type Progress = { received: number; total: number | null };
 
 export function buildFilename(
@@ -21,12 +23,15 @@ export function buildMediaFilename(
 }
 
 export function proxyUrl(url: string, filename: string): string {
-  // Site-relative URLs are our own endpoints (e.g. /api/mux/...): already
-  // same-origin, so skip the proxy and just append the download filename.
+  // Only our known mux route may bypass the proxy. Keep it on the backend
+  // even when the page is hosted separately on Vercel.
   if (url.startsWith("/")) {
-    return `${url}?filename=${encodeURIComponent(filename)}`;
+    if (!/^\/api\/mux\/[A-Za-z0-9]{8,20}\/\d{1,4}\.mp4$/.test(url)) {
+      throw new Error("Invalid media path");
+    }
+    return apiUrl(`${url}?filename=${encodeURIComponent(filename)}`);
   }
-  return `/api/proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+  return apiUrl(`/api/proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`);
 }
 
 async function fetchBlob(url: string, onProgress: (p: Progress) => void): Promise<Blob> {
