@@ -160,7 +160,7 @@ export default function App() {
         </h1>
 
         <motion.p {...fadeRise(1)} className="lede mt-6">
-          Paste tweet URL and get the video in 2 seconds.
+          Paste a tweet URL, pick a quality, and save the video.
         </motion.p>
 
         <motion.div {...fadeRise(2)} className="mx-auto mt-9 max-w-2xl">
